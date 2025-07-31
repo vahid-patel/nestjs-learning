@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/
 import { SignupDto } from './dtos/signup.dto';
 import { User } from './schemas/user.schema';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { loginDto } from './dtos/login.dto';
 import { JwtService } from '@nestjs/jwt';
@@ -60,13 +60,39 @@ export class AuthService {
 
         //Generate JWT Tokens
         const token = await this.generateUserToken(isUserExist._id)
-        return {token : token}
+        return {...token , userId : isUserExist._id}
     }
 
     async generateUserToken(userId){
         const accessToken =  await this.JwtService.sign({userId}, {expiresIn: '1h'})
         const refreshToken = uuidv4()
 
+        this.storeRefreshToken(refreshToken,userId)
         return {accessToken,refreshToken}
+    }
+
+    async storeRefreshToken(token : string, userId){
+        //calculate Expiry date
+        const expiryDate = new Date()
+        expiryDate.setDate(expiryDate.getDate() + 3)
+
+        await this.RefreshTokenModel.updateOne(
+           {userId}, 
+           {$set : {expiryDate, token}},
+            {upsert : true}
+        )
+    }
+
+    async refreshTokens(refreshToken : string){
+        const token = await this.RefreshTokenModel.findOneAndDelete({
+            token: refreshToken,
+            expiryDate : {$gte : new Date()}
+        })
+
+        if(!token){
+            throw new UnauthorizedException('Refresh Token is invalid')
+        }
+
+        return this.generateUserToken(token.userId)
     }
 }

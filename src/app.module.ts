@@ -6,6 +6,8 @@ import * as dotenv from 'dotenv';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import  config  from './config/config';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 
 dotenv.config(); // Load environment variables
 
@@ -36,7 +38,7 @@ dotenv.config(); // Load environment variables
     })
   ],
 
-  controllers: [UsersController], 
-  
+  controllers: [AppController], 
+  providers : [AppService]
 })
 export class AppModule {}
