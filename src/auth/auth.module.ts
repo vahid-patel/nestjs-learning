@@ -4,9 +4,13 @@ import { AuthController } from './auth.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from './schemas/user.schema';
 import { RefreshToken, RefreshTokenSchema } from './schemas/refresh-token.schema';
+import { PassportModule } from '@nestjs/passport';
+import { JwtStrategy } from './strategies/jwt.strategy';
 
 @Module({
-  imports:[MongooseModule.forFeature([
+  imports:[
+    PassportModule,
+    MongooseModule.forFeature([
     {
       name : User.name,
       schema : UserSchema
@@ -17,6 +21,6 @@ import { RefreshToken, RefreshTokenSchema } from './schemas/refresh-token.schema
     }
   ])],
   controllers: [AuthController],
-  providers: [AuthService],
+  providers: [AuthService, JwtStrategy],
 })
 export class AuthModule {}
